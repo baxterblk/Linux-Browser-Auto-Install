@@ -105,12 +105,46 @@ install_firefox() {
     esac
 }
 
+# Corrected Function to Install Vivaldi
+install_vivaldi() {
+    case $OS in
+        "Ubuntu"|"Debian GNU/Linux")
+            wget -qO- https://repo.vivaldi.com/archive/linux_signing_key.pub | sudo apt-key add -
+            sudo add-apt-repository 'deb [arch=i386,amd64] https://repo.vivaldi.com/archive/deb/ stable main'
+            sudo apt update
+            sudo apt install vivaldi-stable
+            ;;
+        "Fedora"|"CentOS Linux"|"Red Hat Enterprise Linux"|"AlmaLinux")
+            # Remove any existing Vivaldi repository file
+            sudo rm -f /etc/yum.repos.d/vivaldi.repo
+
+            # Re-add the correct Vivaldi repository
+            sudo tee /etc/yum.repos.d/vivaldi.repo <<EOF
+[vivaldi]
+name=vivaldi
+baseurl=https://repo.vivaldi.com/archive/rpm/x86_64
+gpgkey=https://repo.vivaldi.com/archive/linux_signing_key.pub
+enabled=1
+gpgcheck=1
+EOF
+
+            # Clean and update the repository lists
+            sudo dnf clean all
+            sudo dnf install vivaldi-stable -y
+            ;;
+        *)
+            echo "Unsupported OS: ${OS}"
+            exit 1
+            ;;
+    esac
+}
+
 # Main script
 check_os
 
 echo "Detected OS: $OS"
 read -p "Would you like to install the required dependencies for this script to run? (yes/no): " confirm
-if [ "$confirm" = "yes" ]; then
+if [[ "$confirm" == "yes" || "$confirm" == "Yes" ]]; then  # Case-insensitive comparison
     install_dependencies
 else
     echo "Dependencies are required to continue. Exiting."
@@ -118,7 +152,7 @@ else
 fi
 
 echo "Which browser would you like to install?"
-options=("Google Chrome" "Brave Browser" "Firefox" "None" "Quit")
+options=("Google Chrome" "Brave Browser" "Firefox" "Vivaldi" "None" "Quit")
 select opt in "${options[@]}"
 do
     case $opt in
@@ -132,6 +166,10 @@ do
             ;;
         "Firefox")
             install_firefox
+            break
+            ;;
+        "Vivaldi")
+            install_vivaldi
             break
             ;;
         "None")
