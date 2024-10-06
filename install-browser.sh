@@ -1,12 +1,20 @@
 #!/bin/bash
 
+# Array of supported OSes
+supported_oses=("Ubuntu" "Debian GNU/Linux" "Fedora" "CentOS Linux" "Red Hat Enterprise Linux" "AlmaLinux")
+
 # Function to check OS type
 check_os() {
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         OS=$NAME
+        # Check if the OS is supported
+        if [[ ! " ${supported_oses[@]} " =~ " ${OS} " ]]; then
+            echo "Unsupported OS: ${OS}"
+            exit 1
+        fi
     else
-        echo "Unsupported OS."
+        echo "Unable to determine OS."
         exit 1
     fi
 }
@@ -22,7 +30,7 @@ install_dependencies() {
             sudo dnf install -y wget gnupg2
             ;;
         *)
-            echo "Unsupported OS."
+            echo "Unsupported OS: ${OS}"
             exit 1
             ;;
     esac
@@ -45,7 +53,7 @@ install_chrome() {
             sudo yum install -y https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
             ;;
         *)
-            echo "Unsupported OS."
+            echo "Unsupported OS: ${OS}"
             exit 1
             ;;
     esac
@@ -74,7 +82,7 @@ install_brave() {
             sudo dnf install -y brave-browser
             ;;
         *)
-            echo "Unsupported OS."
+            echo "Unsupported OS: ${OS}"
             exit 1
             ;;
     esac
@@ -91,7 +99,7 @@ install_firefox() {
             sudo dnf install -y firefox
             ;;
         *)
-            echo "Unsupported OS."
+            echo "Unsupported OS: ${OS}"
             exit 1
             ;;
     esac
@@ -110,7 +118,7 @@ else
 fi
 
 echo "Which browser would you like to install?"
-options=("Google Chrome" "Brave Browser" "Firefox" "Quit")
+options=("Google Chrome" "Brave Browser" "Firefox" "None" "Quit")
 select opt in "${options[@]}"
 do
     case $opt in
@@ -126,8 +134,11 @@ do
             install_firefox
             break
             ;;
-        "Quit")
+        "None")
             break
+            ;;
+        "Quit")
+            exit 0
             ;;
         *) echo "Invalid option $REPLY";;
     esac
